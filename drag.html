@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    ul {
+      width: 200px;
+    }
+    li {
+      width: 100%;
+      height: 20px;
+      border: 1px solid #ccc;
+      margin-top: 1px;
+      cursor: all-scroll
+    }
+    .drag_container > li {
+      transition: 100ms;
+    }
+  </style>
+</head>
+<body>
+  <ul class='drag_container'>
+    <li>1</li>
+    <li>2</li>
+    <li>3</li>
+    <li>4</li>
+    <li>5</li>
+  </ul>
+</body>
+<script>
+  const drag_container = document.querySelector('.drag_container');
+  let childrenList = Array.from(drag_container.children);
+  let childrenLength = childrenList.length;
+  childrenList.forEach(node => {
+    node.setAttribute('draggable',true);
+  });
+  let dragTarget;
+  drag_container.addEventListener('dragstart', e=> {
+    dragTarget = e.target;
+  })
+  drag_container.addEventListener('dragover', e=> {
+    let childrenList = Array.from(drag_container.children);
+    const node = e.target;
+    let dragTargetIndex = childrenList.indexOf(dragTarget);
+    let overTargetIndex = childrenList.indexOf(e.target);
+    if(dragTargetIndex > overTargetIndex) {
+      drag_container.insertBefore(dragTarget,node)
+    } else {
+      if(node.nextElementSibling) {
+      drag_container.insertBefore(dragTarget,node.nextElementSibling)
+      } else {
+      drag_container.appendChild(dragTarget)
+      }
+    }
+  })
+</script>
+</html>
