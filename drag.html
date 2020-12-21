@@ -9,14 +9,32 @@
       width: 200px;
     }
     li {
+      position: relative;
       width: 100%;
       height: 20px;
       border: 1px solid #ccc;
       margin-top: 1px;
-      cursor: all-scroll
+      box-shadow: 0 0 5px #888888;
+      margin-bottom: 10px;
+      cursor: all-scroll;
     }
-    .drag_container > li {
-      transition: 100ms;
+    .drag_box {
+      width: 600px;
+      display: flex;
+      justify-content: space-between;
+      padding: 20px;
+      flex-wrap: wrap;
+    }
+    .card {
+      width: 100px;
+      height: 60px;
+      border: 1px solid #aaaaaa;
+      border-radius: 5px;
+      margin: 10px;
+      list-style-type: none;
+    }
+    .card:hover {
+      cursor: all-scroll;
     }
   </style>
 </head>
@@ -28,32 +46,124 @@
     <li>4</li>
     <li>5</li>
   </ul>
+  <ul class='drag_box'>
+
+  </ul>
 </body>
 <script>
   const drag_container = document.querySelector('.drag_container');
   let childrenList = Array.from(drag_container.children);
   let childrenLength = childrenList.length;
+  let animation;
   childrenList.forEach(node => {
     node.setAttribute('draggable',true);
   });
-  let dragTarget;
+  let dragTarget,dragTargetPosition;
   drag_container.addEventListener('dragstart', e=> {
+    animation = false;
+    e.dataTransfer.effectAllowed = 'move';
     dragTarget = e.target;
   })
   drag_container.addEventListener('dragover', e=> {
-    let childrenList = Array.from(drag_container.children);
+    e.dataTransfer.dropEffect = 'move';
+    childrenList = Array.from(drag_container.children);
     const node = e.target;
     let dragTargetIndex = childrenList.indexOf(dragTarget);
     let overTargetIndex = childrenList.indexOf(e.target);
-    if(dragTargetIndex > overTargetIndex) {
-      drag_container.insertBefore(dragTarget,node)
-    } else {
-      if(node.nextElementSibling) {
-      drag_container.insertBefore(dragTarget,node.nextElementSibling)
+    if(node !== dragTarget && node !== drag_container && !animation) {
+      dragTargetPosition = dragTarget.getBoundingClientRect();
+      let overTargetPosition = node.getBoundingClientRect();
+      if(dragTargetIndex > overTargetIndex) {
+        drag_container.insertBefore(dragTarget,node);
       } else {
-      drag_container.appendChild(dragTarget)
+        if(node.nextElementSibling) {
+          drag_container.insertBefore(dragTarget,node.nextElementSibling);
+        } else {
+          drag_container.appendChild(dragTarget);
+        }
       }
+      dragTarget.style.transition = '0s';
+      dragTarget.style.transform = `translateY(${ -overTargetPosition.y + dragTargetPosition.y }px)`;
+      animation = true;
+      requestAnimationFrame(() => {
+        dragTarget.style.transition = 'transform .4s linear';
+        dragTarget.style.transform = `translateY(0px)`;
+        dragTarget.addEventListener('transitionend',animationEnd);
+      });
     }
   })
+  function animationEnd() {
+    this.style.transform = ``;
+    this.style.transition =  '';
+    this.removeEventListener('transitionend',animationEnd);
+    animation = false;
+  }
+
+  let dragBox = document.querySelector('.drag_box');
+  for(let i = 0; i < 20 ; i++) {
+    let li = document.createElement('li');
+    li.setAttribute('class','card');
+    li.setAttribute('draggable', true);
+    li.innerText = i + 1;
+    dragBox.appendChild(li);
+  }
+  let dragCard,cardAnimation,overCard,dragCardPosition,overCardPosition,cardList,cardPositionList;
+  cardList = Array.from(document.querySelector('.drag_box').children);
+  dragBox.addEventListener('dragstart',e => {
+    cardAnimation = false;
+    dragCard = e.target;
+  })
+  dragBox.addEventListener('dragover', e => {
+    overCard = e.target;
+    cardList = Array.from(document.querySelector('.drag_box').children);
+    let dragCardIndex = cardList.indexOf(dragCard);
+    let overCardIndex = cardList.indexOf(overCard);
+    if(overCard !== dragCard && overCard !== dragBox && !cardAnimation) {
+      cardPositionList = [];
+      if(dragCardIndex > overCardIndex) {
+        for(let i = overCardIndex; i<dragCardIndex; i++) {
+          cardPositionList.push({
+            card: dragBox.children[i],
+            cardPosition: dragBox.children[i].getBoundingClientRect()
+          })
+        }
+        dragBox.insertBefore(dragCard, overCard);
+      } else {
+        for(let i = dragCardIndex; i<=overCardIndex; i++) {
+          cardPositionList.push({
+            card: dragBox.children[i],
+            cardPosition: dragBox.children[i].getBoundingClientRect()
+          })
+        }
+        if(overCard.nextElementSibling) {
+          console.log('overCard.nextElementSibling', overCard.nextElementSibling)
+          dragBox.insertBefore(dragCard, overCard.nextElementSibling);
+        } else {
+          dragBox.appendChild(dragCard);
+        }
+      };
+        cardPositionList.forEach((item,index) => {
+          item.card.style.transform = `translate(${-item.card.getBoundingClientRect().x + item.cardPosition.x}px, ${-item.card.getBoundingClientRect().y + item.cardPosition.y}px)`;
+        });
+      cardAnimation = true;
+      requestAnimationFrame(() => {
+        cardPositionList.forEach((item,index) => {
+          item.card.style.transition = 'transform 0.2s linear';
+          item.card.style.transform = `translate(0px, 0px)`;
+        });
+        console.log('dragCard', dragCard)
+        dragCard.addEventListener('transitionend', cardTransitionEnd);
+      });
+      function cardTransitionEnd() {
+        console.log('111111111111', 111111111111)
+        cardPositionList.forEach((item,index) => {
+          item.card.style.transition = '';
+          item.card.style.transform = ``;
+        });
+        dragCard.removeEventListener('transitionend', cardTransitionEnd);
+        cardAnimation = false;
+      }
+    };
+  });
 </script>
 </html>
