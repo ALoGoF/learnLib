@@ -51,6 +51,7 @@
   </ul>
 </body>
 <script>
+// 一维拖拽
   const drag_container = document.querySelector('.drag_container');
   let childrenList = Array.from(drag_container.children);
   let childrenLength = childrenList.length;
@@ -99,6 +100,7 @@
     animation = false;
   }
 
+// 二维拖拽
   let dragBox = document.querySelector('.drag_box');
   for(let i = 0; i < 20 ; i++) {
     let li = document.createElement('li');
